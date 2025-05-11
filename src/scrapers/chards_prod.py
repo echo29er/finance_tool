@@ -5,13 +5,13 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import logging
-from .chards_coins import COINS  # Import from config
+from .coins import CHARD_COINS  # Import from config
 
 logger = logging.getLogger('price_scraper')
 
 def get_all_prices(output_type=None):
     """
-    Fetch prices for all coins from Chards
+    Fetch prices for all CHARD_COINS from Chards
     
     Args:
         output_type (str, optional): If set to "logging", 
@@ -29,7 +29,7 @@ def get_all_prices(output_type=None):
         )
     
     results = {}
-    for coin_id in COINS:
+    for coin_id in CHARD_COINS:
         price, coin_name = update_price(coin_id)
         if price:
             results[coin_id] = {
@@ -47,13 +47,13 @@ def get_all_prices(output_type=None):
 
 def update_price(coin_id):
     """Fetch the price for a specific coin"""
-    if coin_id not in COINS:
+    if coin_id not in CHARD_COINS:
         logger.error(f"Unknown coin ID: {coin_id}")
         return None, None
         
-    url = COINS[coin_id][0]
-    coin_name = COINS[coin_id][1]
-    price_column = COINS[coin_id][2]
+    url = CHARD_COINS[coin_id][0]
+    coin_name = CHARD_COINS[coin_id][1]
+    price_column = CHARD_COINS[coin_id][2]
     
     price = scrape_chards_price(url, coin_name, price_column)
     
