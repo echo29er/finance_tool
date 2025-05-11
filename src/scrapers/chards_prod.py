@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import logging
-from chards_coins import COINS
+from .chards_coins import COINS
 
 logger = logging.getLogger('price_scraper')
 
