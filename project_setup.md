@@ -80,7 +80,11 @@ If `.DS_Store` has already been committed and you need to remove it:
 ```bash
 # Remove .DS_Store from repository but keep it on filesystem
 git rm --cached .DS_Store
-git commit -m "Remove .DS_Store from repository"
+
+# Commit the changes to .gitignore and the removal of .DS_Store
+git add .gitignore
+git commit -m "Remove .DS_Store from repository and update .gitignore"
+git push origin main
 ```
 
 ## Setting Up a Virtual Environment
