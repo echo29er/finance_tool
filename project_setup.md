@@ -6,7 +6,7 @@ This guide covers setting up a GitHub repository for a Python-based finance tool
 
 ### Cloning the Empty Repository
 ```bash
-git clone https://github.com/echo29er/finance_tool.git
+git clone https://github.com/your-username/finance_tool.git
 cd finance_tool
 ```
 
@@ -64,12 +64,23 @@ Create a Python-specific .gitignore file:
 curl https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore > .gitignore
 ```
 
-Add MongoDB and environment-specific ignores:
+Add MongoDB, environment-specific, and macOS-specific ignores:
 ```bash
 echo "# MongoDB" >> .gitignore
 echo "data/" >> .gitignore
 echo "# Environment" >> .gitignore
 echo ".env" >> .gitignore
+echo "# macOS" >> .gitignore
+echo ".DS_Store" >> .gitignore
+echo "**/.DS_Store" >> .gitignore
+echo ".DS_Store?" >> .gitignore
+```
+
+If `.DS_Store` has already been committed and you need to remove it:
+```bash
+# Remove .DS_Store from repository but keep it on filesystem
+git rm --cached .DS_Store
+git commit -m "Remove .DS_Store from repository"
 ```
 
 ## Setting Up a Virtual Environment
@@ -92,7 +103,7 @@ pip install requests beautifulsoup4 pymongo python-dotenv pandas
 pip freeze > requirements.txt
 ```
 
-The virtual environment (`venv` folder) is local to your machine and is not pushed to GitHub. VS Code will automatically recognise this environment once created.
+The virtual environment (`venv` folder) is local to your machine and is not pushed to GitHub. VS Code will automatically recognize this environment once created.
 
 ## Setting Up Environment Variables
 
