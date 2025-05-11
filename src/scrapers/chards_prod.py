@@ -5,12 +5,29 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import logging
-from .chards_coins import COINS
+from .chards_coins import COINS  # Import from config
 
 logger = logging.getLogger('price_scraper')
 
-def get_all_prices():
-    """Fetch prices for all coins from Chards"""
+def get_all_prices(output_type=None):
+    """
+    Fetch prices for all coins from Chards
+    
+    Args:
+        output_type (str, optional): If set to "logging", 
+                                     will print results like in main. 
+                                     Default is None.
+    
+    Returns:
+        dict: Dictionary of coin prices
+    """
+    # Set up logging if requested
+    if output_type == "logging":
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+    
     results = {}
     for coin_id in COINS:
         price, coin_name = update_price(coin_id)
@@ -19,6 +36,13 @@ def get_all_prices():
                 "price": price,
                 "name": coin_name
             }
+            
+            # Print results if logging mode is active
+            if output_type == "logging":
+                print(f"The current {coin_name} price is: £{price}")
+        elif output_type == "logging":
+            print(f"Could not find the price for {coin_name}")
+    
     return results
 
 def update_price(coin_id):
@@ -121,10 +145,5 @@ if __name__ == "__main__":
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Test each coin
-    for coin_id in COINS:
-        price, coin_name = update_price(coin_id)
-        if price:
-            print(f"The current {coin_name} price is: £{price}")
-        else:
-            print(f"Could not find the price for {coin_name}")
+    # Use the get_all_prices function with logging mode
+    get_all_prices("logging")
