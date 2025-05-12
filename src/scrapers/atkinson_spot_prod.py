@@ -93,7 +93,7 @@ def scrape_atkinsons_spot_price(url, metal_name, class_name):
         logger.error(f"Error scraping price for {metal_name}: {e}")
         return None
 
-def extract_table_price(soup, metal_name, class_name):
+def extract_table_price_old(soup, metal_name, class_name):
 
     """
     Extract spot price from table for specified metal and price type.
@@ -108,7 +108,7 @@ def extract_table_price(soup, metal_name, class_name):
     """
     try:
         # First, find the specific price table
-        table = soup.find('table', {'data-lp': 'spotPrice'})
+        table = soup.find('table', {'data-lp': 'spotPrice', 'class': lambda c: c and 'header-price-table--mobile' not in c})
         if not table:
             logger.warning(f"Price table not found for {metal_name}")
             return None
@@ -178,6 +178,109 @@ def extract_table_price(soup, metal_name, class_name):
         #     return price
             
         logger.warning(f"Could not extract price from text: '{price_text}'")
+        return None
+    except Exception as e:
+        logger.error(f"Error extracting table price for {metal_name}: {e}")
+        return None
+    
+
+def extract_table_price(soup, metal_name, class_name):
+    """
+    Extract spot price from table for specified metal and price type.
+    
+    Args:
+        soup: BeautifulSoup object containing the webpage
+        metal_name: String, either 'gold' or 'silver'
+        class_name: String, CSS class name for the price cell
+    
+    Returns:
+        Float: The price value or None if not found
+    """
+    try:
+        # Look for the price directly in the HTML content
+        html_content = str(soup)
+        
+        # Determine the pattern based on metal name and class name
+        if 'gold' in metal_name.lower():
+            if 'grams' in class_name:
+                pattern = r'js-lp-gold-grams["\']>£?([\d,\.]+)<'
+            else:
+                pattern = r'js-lp-gold-toz["\']>£?([\d,\.]+)<'
+        elif 'silver' in metal_name.lower():
+            if 'grams' in class_name:
+                pattern = r'js-lp-silver-grams["\']>£?([\d,\.]+)<'
+            else:
+                pattern = r'js-lp-silver-toz["\']>£?([\d,\.]+)<'
+        else:
+            logger.warning(f"Unknown metal name: {metal_name}")
+            return None
+        
+        match = re.search(pattern, html_content)
+        if match:
+            price_str = match.group(1).replace(',', '')
+            try:
+                price = float(price_str)
+                logger.info(f"Found {metal_name} price: £{price}")
+                return price
+            except ValueError:
+                logger.error(f"Could not convert '{price_str}' to float")
+                return None
+        
+        # If regex approach failed, try the traditional approach
+        logger.warning(f"Regex search failed for {metal_name}, trying traditional approach")
+        
+        # Find the price cell directly using the class name
+        price_cell = soup.find('td', class_=class_name)
+        
+        if not price_cell:
+            logger.warning(f"Could not find price cell with class '{class_name}', trying alternative methods")
+            
+            # Try to find the table first
+            table = soup.find('table', {'data-lp': 'spotPrice'})
+            if not table:
+                logger.warning(f"Price table not found for {metal_name}")
+                return None
+                
+            # Find the row containing the metal name
+            metal_row = None
+            for row in table.find_all('tr'):
+                th = row.find('th')
+                if th and metal_name.lower() in th.text.lower():
+                    metal_row = row
+                    break
+            
+            if not metal_row:
+                logger.warning(f"Row for {metal_name} not found")
+                return None
+                
+            # Determine which cell to use based on class_name suffix
+            cells = metal_row.find_all('td')
+            if not cells or len(cells) < 2:
+                logger.warning(f"Not enough price cells found for {metal_name}")
+                return None
+                
+            cell_index = 0  # Default to troy ounce
+            if 'grams' in class_name:
+                cell_index = 1  # Use gram price
+                
+            price_cell = cells[cell_index]
+        
+        # Extract text from the cell
+        if price_cell:
+            price_text = price_cell.get_text(strip=True)
+            if not price_text:
+                logger.warning("Price cell contains no text (possibly a loading SVG)")
+                return None
+            
+            # Extract the price - handle both £1,234.56 and £1234.56 formats
+            match = re.search(r'£?([\d,]+\.\d+)', price_text)
+            if match:
+                # Remove commas for proper float conversion
+                price = float(match.group(1).replace(',', ''))
+                logger.info(f"Found {metal_name} price: £{price}")
+                return price
+                
+        logger.warning(f"Could not extract price for {metal_name}")
         return None
     except Exception as e:
         logger.error(f"Error extracting table price for {metal_name}: {e}")
